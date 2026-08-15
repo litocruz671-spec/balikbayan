@@ -2,6 +2,7 @@ import { Package, User, Bell, ChevronDown, Globe } from 'lucide-react';
 import { Button } from './Button';
 import { useApp } from '../context/AppContext';
 import { useState } from 'react';
+import { copyToClipboard } from '../utils/clipboard';
 
 export function Navbar() {
   const { walletConnected, walletAddress, walletError, connectWallet, disconnectWallet, userRole, setUserRole } = useApp();
@@ -100,7 +101,7 @@ export function Navbar() {
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-[#E2E8F0] py-1">
                       <button
                         onClick={() => {
-                          navigator.clipboard.writeText(walletAddress);
+                          copyToClipboard(walletAddress);
                           setShowWalletMenu(false);
                         }}
                         className="w-full text-left px-4 py-2 hover:bg-[#EFF6FF] text-[#1E293B]"

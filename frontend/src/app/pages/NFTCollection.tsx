@@ -20,7 +20,7 @@ export function NFTCollection({ onNavigate }: { onNavigate: (page: string) => vo
     ? nftBoxes
     : nftBoxes.filter(box => box.tier === filterTier);
 
-  const handleShareBox = (box: typeof nftBoxes[0]) => {
+  const handleShareBox = (_box: typeof nftBoxes[0]) => {
     showToast('success', 'Box image saved! Share with your family and friends.');
   };
 
