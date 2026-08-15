@@ -184,7 +184,7 @@ export function MerchantDashboard() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-xl font-bold text-[#1E293B]">Redemption Details</h2>
-              <button onClick={() => setSelectedRedemption(null)} className="text-[#64748B] hover:text-[#1E293B]">
+              <button onClick={() => setSelectedRedemption(null)} aria-label="Close" className="text-[#64748B] hover:text-[#1E293B]">
                 <X size={24} />
               </button>
             </div>

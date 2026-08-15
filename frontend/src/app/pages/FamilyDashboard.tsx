@@ -229,7 +229,7 @@ export function FamilyDashboard() {
                   <p className="text-[#64748B]">From OFW Sender</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedPromiseForDetails(null)} className="text-[#64748B] hover:text-[#1E293B]"><X size={24} /></button>
+              <button onClick={() => setSelectedPromiseForDetails(null)} aria-label="Close" className="text-[#64748B] hover:text-[#1E293B]"><X size={24} /></button>
             </div>
             <div className="space-y-6">
               <div className="bg-[#EFF6FF] rounded-2xl p-6 space-y-4">
@@ -285,7 +285,7 @@ export function FamilyDashboard() {
               <h2 className="text-2xl font-semibold text-[#1E293B]">
                 Prove {selectedPromise && getBillTypeLabel(selectedPromise.billType)} was paid
               </h2>
-              <button onClick={() => { setShowProofModal(false); setVerificationResult(null); setUploadedImage(null); }} className="text-[#64748B] hover:text-[#1E293B]">
+              <button onClick={() => { setShowProofModal(false); setVerificationResult(null); setUploadedImage(null); }} aria-label="Close" className="text-[#64748B] hover:text-[#1E293B]">
                 <X size={24} />
               </button>
             </div>
@@ -320,6 +320,7 @@ export function FamilyDashboard() {
                       <img src={uploadedImage.preview} alt="Receipt" className="w-full rounded-2xl max-h-64 object-contain border border-[#E2E8F0]" />
                       <button
                         onClick={() => { setUploadedImage(null); setVerificationResult(null); }}
+                        aria-label="Remove uploaded receipt"
                         className="absolute top-2 right-2 bg-white rounded-full p-1 shadow"
                       >
                         <X size={16} />
@@ -411,7 +412,7 @@ export function FamilyDashboard() {
           <div className="bg-white rounded-2xl max-w-md w-full p-8 animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-2xl font-bold text-[#1E293B]">My Tier Badge</h2>
-              <button onClick={() => setShowTierQR(false)} className="text-[#64748B] hover:text-[#1E293B]"><X size={24} /></button>
+              <button onClick={() => setShowTierQR(false)} aria-label="Close" className="text-[#64748B] hover:text-[#1E293B]"><X size={24} /></button>
             </div>
             <div className="space-y-6">
               <p className="text-[#64748B] text-center">Show this QR code at partner merchants to get your discount</p>

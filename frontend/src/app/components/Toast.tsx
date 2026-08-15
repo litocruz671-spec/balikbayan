@@ -60,6 +60,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <p className="text-[#1E293B] flex-1">{toast.message}</p>
             <button
               onClick={() => removeToast(toast.id)}
+              aria-label="Dismiss notification"
               className="absolute top-2 right-2 text-[#64748B] hover:text-[#1E293B]"
             >
               <X size={16} />

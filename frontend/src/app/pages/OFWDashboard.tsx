@@ -245,7 +245,7 @@ export function OFWDashboard({ onNavigate }: { onNavigate: (page: string) => voi
                 <p className="text-[#64748B]">Sent to {selectedPromise.recipientName}</p>
               </div>
             </div>
-            <button onClick={() => setSelectedPromise(null)} className="text-[#64748B] hover:text-[#1E293B]">
+            <button onClick={() => setSelectedPromise(null)} aria-label="Close" className="text-[#64748B] hover:text-[#1E293B]">
               <X size={24} />
             </button>
           </div>
@@ -346,7 +346,7 @@ export function OFWDashboard({ onNavigate }: { onNavigate: (page: string) => voi
         <div className="bg-white rounded-2xl max-w-3xl w-full p-8 animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-start mb-6">
             <h2 className="text-2xl font-bold text-[#1E293B]">BalikBayan Box Details</h2>
-            <button onClick={() => setSelectedBox(null)} className="text-[#64748B] hover:text-[#1E293B]">
+            <button onClick={() => setSelectedBox(null)} aria-label="Close" className="text-[#64748B] hover:text-[#1E293B]">
               <X size={24} />
             </button>
           </div>
