@@ -6,12 +6,15 @@ import { EmptyState } from '../components/EmptyState';
 import { useApp } from '../context/AppContext';
 import { useState } from 'react';
 import { useToast } from '../components/Toast';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 export function NFTCollection({ onNavigate }: { onNavigate: (page: string) => void }) {
   const { nftBoxes, currentTier } = useApp();
   const { showToast } = useToast();
   const [selectedBox, setSelectedBox] = useState<typeof nftBoxes[0] | null>(null);
   const [filterTier, setFilterTier] = useState<string>('all');
+
+  useEscapeKey(!!selectedBox, () => setSelectedBox(null));
 
   const totalAmount = nftBoxes.reduce((sum, box) => sum + box.amount, 0);
   const memberSince = nftBoxes.length > 0 ? new Date(nftBoxes[0].date).toLocaleDateString() : 'N/A';
