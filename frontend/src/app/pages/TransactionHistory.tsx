@@ -8,6 +8,7 @@ import { EmptyState } from '../components/EmptyState';
 import { useApp } from '../context/AppContext';
 import { useState } from 'react';
 import { useToast } from '../components/Toast';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 export function TransactionHistory() {
   const { escrows: promises } = useApp();
@@ -16,6 +17,8 @@ export function TransactionHistory() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [billTypeFilter, setBillTypeFilter] = useState('all');
   const [selectedTransaction, setSelectedTransaction] = useState<typeof promises[0] | null>(null);
+
+  useEscapeKey(!!selectedTransaction, () => setSelectedTransaction(null));
 
   const filteredPromises = promises.filter(promise => {
     const matchesSearch = promise.recipientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
