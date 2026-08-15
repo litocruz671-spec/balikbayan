@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 # BalikBayan
 OFW conditional remittance and NFT legacy platform, built on Stellar.
@@ -355,3 +356,6 @@ The most common requests above are shaping the near-term roadmap:
 
 ## Why Stellar
 No other chain gives sub-cent fees with native USDC support at the speed OFW remittances demand. Stellar's 3–5 second finality and sub-PHP-1 fees make this directly competitive against Remitly, Western Union, and GCash padala. The escrow contract is composable — the same pattern works for any conditional payment use case beyond remittances.
+=======
+# balikbayan
+>>>>>>> 7e20580140823826b133f9c6bbc82812ba91c735
