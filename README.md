@@ -1,11 +1,11 @@
-<<<<<<< HEAD
-
 # BalikBayan
 OFW conditional remittance and NFT legacy platform, built on Stellar.
 
+Built by Lito Cruz.
+
 **Live Demo:** [balikbayan2-stellar.vercel.app](https://balikbayan2-stellar.vercel.app)
-**Demo Video:** [youtu.be/mPDReSxyeF0](https://youtu.be/mPDReSxyeF0)
-**Pitch Deck:** [canva.link/mumy0hixd5nz78i](https://canva.link/mumy0hixd5nz78i)
+**Demo Video:** [youtu.be/QHlMQDY7RLo](https://youtu.be/QHlMQDY7RLo?si=HLTIdWhFtL8n35Nx)
+**Pitch Deck:** [canva.link/49tqe3zkf5p29nn](https://canva.link/49tqe3zkf5p29nn)
 
 ## Problem
 A Filipino OFW working in Riyadh sends PHP 20,000 home every month for tuition, electricity, and medicine. Once the money hits the family's GCash — he loses all control. He has no way to ensure funds reach their intended purpose, no tamper-proof record of five years of consistent remittances to show banks or PAG-IBIG, and no rewards for being one of the 10 million OFWs collectively sending PHP 1.6 trillion home every year — nearly 9% of Philippine GDP. Every sacrifice is invisible.
@@ -264,7 +264,7 @@ Filipino OFWs (10 million strong) sending PHP 1.6 trillion home annually — wor
 
 | Name | Wallet Address |
 |---|---|
-| Bernabe, Melfred U. | `GD4ZG3Q7WTG55AM5OCRVGJIHJPYRRBJ4UYSM37H7FF27OILGUTAX46EM` |
+| Cruz, Lito | `GD4ZG3Q7WTG55AM5OCRVGJIHJPYRRBJ4UYSM37H7FF27OILGUTAX46EM` |
 | Ethan Dreiz Baltazar | `CAX4JXJRLGWAGG2PNC36CNJXM5KVM4L5WNK6ID6WNRQHCEIZLQVCJ2YD` |
 | Maria Santos | `GCCALVKA5CK3KBCXJBBVKP56R2IOPW7ZUFUVM2BCSJHMBZZMJ55KR4LU` |
 | Jose Reyes | `GA2AG5RVFWM4ATBYZ56SJYGJRQJJI5WECW66RPJXXRWM7NS2GXZDY6CQ` |
@@ -330,7 +330,7 @@ Raw Responses: [Google Sheet](https://docs.google.com/spreadsheets/d/196_Zh_AjB0
 - **Feature usage:** Send Money / Create Escrow (37), Transaction History (32), Family Dashboard / Confirm Payment (20), NFT Box Collection (17), Merchant Dashboard (9)
 
 **What testers liked most:**
-- "The escrow system makes remittances more secure and transparent." — Melfred Bernabe
+- "The escrow system makes remittances more secure and transparent." — Lito Cruz
 - "The NFT reward idea makes sending money more engaging." — Ethan Dreiz Baltazar
 - "Escrow gives confidence that funds are protected." — Jose Reyes
 - "Sending remittances while earning NFTs is a unique idea." — Teresa Navarro
@@ -356,6 +356,3 @@ The most common requests above are shaping the near-term roadmap:
 
 ## Why Stellar
 No other chain gives sub-cent fees with native USDC support at the speed OFW remittances demand. Stellar's 3–5 second finality and sub-PHP-1 fees make this directly competitive against Remitly, Western Union, and GCash padala. The escrow contract is composable — the same pattern works for any conditional payment use case beyond remittances.
-=======
-# balikbayan
->>>>>>> 7e20580140823826b133f9c6bbc82812ba91c735
