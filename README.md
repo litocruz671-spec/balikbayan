@@ -209,6 +209,7 @@ The app runs at http://localhost:5173.
 **Environment variables (`.env`):**
 ```
 VITE_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
+VITE_HORIZON_URL=https://horizon-testnet.stellar.org
 VITE_CONTRACT_ID=<deployed contract ID>
 VITE_TOKEN_CONTRACT_ID=CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA
 ANTHROPIC_API_KEY=<your Anthropic API key>
