@@ -191,7 +191,7 @@ export function TransactionHistory() {
                   <p className="text-[#64748B]">To {selectedTransaction.recipientName}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedTransaction(null)} className="text-[#64748B] hover:text-[#1E293B]">
+              <button onClick={() => setSelectedTransaction(null)} aria-label="Close" className="text-[#64748B] hover:text-[#1E293B]">
                 <X size={24} />
               </button>
             </div>
