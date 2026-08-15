@@ -403,7 +403,7 @@ export function LandingPage() {
             </div>
             <div className="border-t border-slate-700 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-sm">© 2026 BalikBayan. Building financial accountability for OFW families.</p>
-              <p className="text-sm">Built on Stellar</p>
+              <p className="text-sm">Built by Lito Cruz · Built on Stellar</p>
             </div>
           </div>
         </footer>

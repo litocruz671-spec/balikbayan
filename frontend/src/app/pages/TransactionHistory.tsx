@@ -222,7 +222,7 @@ export function TransactionHistory() {
                   <p className="font-semibold text-[#1E293B]">{new Date(selectedTransaction.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-[#64748B] mb-1">Time Status</p>
+                  <p className="text-sm text-[#64748B] mb-1">Time Left</p>
                   <p className="font-semibold text-[#1E293B]">{getDaysLeft(selectedTransaction.deadline)}</p>
                 </div>
               </div>
