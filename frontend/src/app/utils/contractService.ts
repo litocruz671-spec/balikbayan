@@ -37,15 +37,15 @@ const server = new SorobanRpc.Server(RPC_URL);
 const horizon = new Horizon.Server(HORIZON_URL);
 
 // PHP to XLM conversion (7 decimal places on Stellar; fixed demo rate)
-const PHP_TO_USD = 56;
+const PHP_TO_XLM = 56;
 const TOKEN_DECIMALS = 10_000_000n;
 
 export function phpToTokenUnits(php: number): bigint {
-  return BigInt(Math.round((php / PHP_TO_USD) * Number(TOKEN_DECIMALS)));
+  return BigInt(Math.round((php / PHP_TO_XLM) * Number(TOKEN_DECIMALS)));
 }
 
 export function tokenUnitsToPHP(units: bigint): number {
-  return (Number(units) / Number(TOKEN_DECIMALS)) * PHP_TO_USD;
+  return (Number(units) / Number(TOKEN_DECIMALS)) * PHP_TO_XLM;
 }
 
 const BILL_TYPE_VARIANTS: Record<string, string> = {
