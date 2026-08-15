@@ -3,6 +3,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { TierBadge } from '../components/TierBadge';
 import { useState } from 'react';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 export function MerchantDashboard() {
   const [showScanner, setShowScanner] = useState(false);
@@ -17,6 +18,8 @@ export function MerchantDashboard() {
     discount: string;
     timestamp: string;
   }>(null);
+
+  useEscapeKey(!!selectedRedemption, () => setSelectedRedemption(null));
 
   const handleScan = () => {
     setShowScanner(true);
