@@ -4,8 +4,16 @@ import { useApp } from '../context/AppContext';
 import { useState } from 'react';
 import { copyToClipboard } from '../utils/clipboard';
 
+function formatXlm(balance: string): string {
+  const n = Number(balance);
+  return Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 2 }) : balance;
+}
+
 export function Navbar() {
-  const { walletConnected, walletAddress, walletError, connectWallet, disconnectWallet, userRole, setUserRole } = useApp();
+  const {
+    walletConnected, walletAddress, walletError, connectWallet, disconnectWallet,
+    userRole, setUserRole, xlmBalance, isBalanceLoading,
+  } = useApp();
   const [showWalletMenu, setShowWalletMenu] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -87,7 +95,13 @@ export function Navbar() {
               )}
 
               {walletConnected ? (
-                <div className="relative">
+                <div className="relative flex items-center gap-2">
+                  <div
+                    title="Native XLM balance (testnet)"
+                    className="hidden sm:flex items-center gap-1 px-3 py-2 bg-[#EFF6FF] rounded-2xl text-sm font-mono text-[#2C5EAD]"
+                  >
+                    {isBalanceLoading ? '…' : `${formatXlm(xlmBalance)} XLM`}
+                  </div>
                   <button
                     onClick={() => setShowWalletMenu(!showWalletMenu)}
                     className="flex items-center gap-2 px-4 py-2 bg-[#2C5EAD] text-white rounded-2xl hover:bg-[#1591DC] transition-colors"

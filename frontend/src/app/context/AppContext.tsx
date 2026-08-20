@@ -5,6 +5,7 @@ import { TierType } from '../components/NFTBoxCard';
 import { BillType } from '../components/BillTypeIcon';
 import { CONTRACT_READY } from '../utils/sorobanConfig';
 import * as contractService from '../utils/contractService';
+import { getXlmBalance } from '../utils/xlmService';
 
 /**
  * Normalize any Stellar address to a plain G... Ed25519 public key.
@@ -70,6 +71,9 @@ interface AppContextValue {
   userRole: UserRole;
   contractReady: boolean;
   isChainLoading: boolean;
+  xlmBalance: string;
+  isBalanceLoading: boolean;
+  refreshXlmBalance: () => Promise<void>;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   setUserRole: (role: UserRole) => void;
@@ -124,6 +128,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [escrows, setEscrows] = useState<Escrow[]>(loadPersistedEscrows);
   const [nftBoxes, setNFTBoxes] = useState<NFTBox[]>([]);
   const [isChainLoading, setIsChainLoading] = useState(false);
+  const [xlmBalance, setXlmBalance] = useState('0');
+  const [isBalanceLoading, setIsBalanceLoading] = useState(false);
+
+  const refreshXlmBalance = useCallback(async (address?: string) => {
+    const addr = address ?? walletAddress;
+    if (!addr) return;
+
+    setIsBalanceLoading(true);
+    try {
+      const balance = await getXlmBalance(addr);
+      setXlmBalance(balance);
+    } catch (err) {
+      console.error('Failed to fetch XLM balance:', err);
+    } finally {
+      setIsBalanceLoading(false);
+    }
+  }, [walletAddress]);
 
   const refreshFromChain = useCallback(async (address?: string) => {
     const addr = address ?? walletAddress;
@@ -213,6 +234,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Hydrate from chain in background
       refreshFromChain(addr);
+      refreshXlmBalance(addr);
     } catch (err) {
       setWalletError(err instanceof Error ? err.message : 'Failed to connect wallet.');
     }
@@ -224,6 +246,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setWalletError(null);
     setUserRole(null);
     setNFTBoxes([]);
+    setXlmBalance('0');
   };
 
   const addEscrow = (escrow: Escrow) => {
@@ -315,6 +338,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       userRole,
       contractReady: CONTRACT_READY,
       isChainLoading,
+      xlmBalance,
+      isBalanceLoading,
+      refreshXlmBalance,
       connectWallet,
       disconnectWallet,
       setUserRole,

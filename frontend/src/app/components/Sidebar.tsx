@@ -1,4 +1,4 @@
-import { Home, Send, Package, History, Settings, QrCode } from 'lucide-react';
+import { Home, Send, Package, History, Settings, QrCode, Wallet } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface SidebarProps {
@@ -6,12 +6,18 @@ interface SidebarProps {
   onNavigate: (page: string) => void;
 }
 
+function formatXlm(balance: string): string {
+  const n = Number(balance);
+  return Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 2 }) : balance;
+}
+
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
-  const { userRole, walletAddress, disconnectWallet } = useApp();
+  const { userRole, walletAddress, disconnectWallet, xlmBalance, isBalanceLoading } = useApp();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, roles: ['ofw', 'family', 'merchant'] },
     { id: 'send', label: 'Send Money', icon: Send, roles: ['ofw'] },
+    { id: 'wallet', label: 'Send XLM (Testnet)', icon: Wallet, roles: ['ofw', 'family', 'merchant'] },
     { id: 'boxes', label: 'My Boxes', icon: Package, roles: ['ofw', 'family'] },
     { id: 'history', label: 'Transaction History', icon: History, roles: ['ofw', 'family'] },
     { id: 'scanner', label: 'QR Scanner', icon: QrCode, roles: ['merchant'] }
@@ -51,6 +57,10 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
             <div className="px-4 py-2 bg-[#EFF6FF] rounded-2xl">
               <p className="text-xs text-[#64748B] mb-1">Connected Wallet</p>
               <p className="font-mono text-sm text-[#1E293B] truncate">{walletAddress}</p>
+              <p className="text-xs text-[#64748B] mt-2 mb-1">XLM Balance (testnet)</p>
+              <p className="font-mono text-sm font-semibold text-[#2C5EAD]">
+                {isBalanceLoading ? 'Loading…' : `${formatXlm(xlmBalance)} XLM`}
+              </p>
             </div>
             <button
               onClick={disconnectWallet}

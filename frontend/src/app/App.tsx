@@ -8,6 +8,7 @@ import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './pages/LandingPage';
 import { OFWDashboard } from './pages/OFWDashboard';
 import { SendMoneyWizard } from './pages/SendMoneyWizard';
+import { SendXlm } from './pages/SendXlm';
 import { FamilyDashboard } from './pages/FamilyDashboard';
 import { NFTCollection } from './pages/NFTCollection';
 import { TransactionHistory } from './pages/TransactionHistory';
@@ -31,6 +32,10 @@ function AppContent() {
 
     if (currentPage === 'send') {
       return <SendMoneyWizard onNavigate={handleNavigate} />;
+    }
+
+    if (currentPage === 'wallet') {
+      return <SendXlm onNavigate={handleNavigate} />;
     }
 
     if (currentPage === 'boxes') {
