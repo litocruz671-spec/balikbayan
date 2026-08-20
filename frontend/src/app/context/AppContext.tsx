@@ -16,7 +16,7 @@ import { getXlmBalance } from '../utils/xlmService';
 function normalizeToGAddress(addr: string): string {
   if (!addr) return addr;
   // Muxed account (M...) — extract base G-address
-  if (addr.startsWith('M') && StrKey.isValidMuxedAccount(addr)) {
+  if (addr.startsWith('M') && StrKey.isValidMed25519PublicKey(addr)) {
     try {
       const muxed = MuxedAccount.fromAddress(addr, '0');
       return muxed.baseAccount().accountId();
