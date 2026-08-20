@@ -11,8 +11,11 @@ import {
   nativeToScVal,
   scValToNative,
 } from '@stellar/stellar-sdk';
-import { signTransaction } from '@stellar/freighter-api';
+import { kitSignTransaction } from './walletKit';
 import { CONTRACT_ID, HORIZON_URL, NETWORK_PASSPHRASE, RPC_URL, TOKEN_CONTRACT_ID } from './sorobanConfig';
+import { phpToTokenUnits, tokenUnitsToPHP } from './tokenMath';
+
+export { phpToTokenUnits, tokenUnitsToPHP };
 
 // Build ScVal for any Stellar address (G... account or C... contract)
 function addressToScVal(address: string): xdr.ScVal {
@@ -35,18 +38,6 @@ function addressToScVal(address: string): xdr.ScVal {
 
 const server = new SorobanRpc.Server(RPC_URL);
 const horizon = new Horizon.Server(HORIZON_URL);
-
-// PHP to XLM conversion (7 decimal places on Stellar; fixed demo rate)
-const PHP_TO_XLM = 56;
-const TOKEN_DECIMALS = 10_000_000n;
-
-export function phpToTokenUnits(php: number): bigint {
-  return BigInt(Math.round((php / PHP_TO_XLM) * Number(TOKEN_DECIMALS)));
-}
-
-export function tokenUnitsToPHP(units: bigint): number {
-  return (Number(units) / Number(TOKEN_DECIMALS)) * PHP_TO_XLM;
-}
 
 const BILL_TYPE_VARIANTS: Record<string, string> = {
   tuition: 'Tuition',
@@ -101,13 +92,10 @@ async function buildAndSubmit(
 
   const preparedTx = await server.prepareTransaction(tx);
 
-  const signResult = await signTransaction(preparedTx.toXDR(), {
+  const signResult = await kitSignTransaction(preparedTx.toXDR(), {
     networkPassphrase: NETWORK_PASSPHRASE,
+    address: walletAddress,
   });
-
-  if ('error' in signResult) {
-    throw new Error((signResult.error as Error).message ?? 'Signing rejected');
-  }
 
   const signedTx = TransactionBuilder.fromXDR(
     signResult.signedTxXdr,
@@ -220,13 +208,10 @@ export async function ensureTrustline(walletAddress: string): Promise<boolean> {
     .setTimeout(30)
     .build();
 
-  const signResult = await signTransaction(tx.toXDR(), {
+  const signResult = await kitSignTransaction(tx.toXDR(), {
     networkPassphrase: NETWORK_PASSPHRASE,
+    address: walletAddress,
   });
-
-  if ('error' in signResult) {
-    throw new Error((signResult.error as Error).message ?? 'Trustline signing rejected');
-  }
 
   const signedTx = TransactionBuilder.fromXDR(signResult.signedTxXdr, NETWORK_PASSPHRASE);
   await horizon.submitTransaction(signedTx);

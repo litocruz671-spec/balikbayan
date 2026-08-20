@@ -14,12 +14,30 @@ A Filipino OFW working in Riyadh sends PHP 20,000 home every month for tuition, 
 BalikBayan lets the OFW lock USDC in a Soroban smart contract escrow tagged to a specific bill — tuition, Meralco, Maynilad, PLDT, hospital, rent, or groceries. Funds are held on-chain and released only when the family submits verified proof of payment, checked by an AI layer powered by the Anthropic API. Every fulfilled promise automatically mints a collectible BalikBayan Box NFT to the OFW's wallet — a permanent, tamper-proof record of sacrifice. As boxes accumulate, the OFW advances through tiers (Common → Silver → Gold → Diamond → Legend) that unlock real merchant discounts for the family back home. Settlement happens in under 5 seconds with fees under PHP 1.
 
 ## Demo Flow (2 minutes)
-1. Connect Freighter wallet (testnet) as OFW
+1. Connect a Stellar wallet (testnet) as OFW — Freighter, xBull, Albedo, Rabet, LOBSTR, or Hana
 2. Enter family's Stellar wallet address and bill details (e.g. Meralco, PHP 2,200)
 3. Submit — contract locks USDC on-chain, Promise NFT mints to OFW wallet
 4. Switch to family wallet — submit receipt photo as proof
 5. AI verifies receipt — USDC releases to family wallet instantly
 6. BalikBayan Box NFT mints — tier updates in OFW dashboard
+
+## Wallet Connection & Testnet Transaction
+
+Multi-wallet connect (via [Stellar Wallets Kit](https://stellarwalletskit.dev/)), live XLM balance, and a plain signed testnet transaction — end to end, verified on [Stellar Expert](https://stellar.expert/explorer/testnet).
+
+**Wallet options available:**
+<img width="1440" alt="Wallet picker showing Freighter, xBull, Albedo, Rabet, LOBSTR, and Hana" src="docs/screenshots/wallet-options.png" />
+
+**Wallet connected state:**
+<img width="1440" alt="BalikBayan dashboard with a connected wallet address shown in the navbar and sidebar" src="docs/screenshots/wallet-connected.png" />
+
+**Balance displayed:**
+<img width="1440" alt="Send XLM page showing the connected wallet's live XLM balance" src="docs/screenshots/xlm-balance.png" />
+
+**Successful testnet transaction, with the result and transaction hash shown to the user:**
+<img width="1440" alt="Successful XLM testnet transaction with transaction hash and a link to Stellar Expert" src="docs/screenshots/xlm-transaction-success.png" />
+
+This flow ([SendXlm.tsx](frontend/src/app/pages/SendXlm.tsx)) is a plain `Operation.payment` — separate from the USDC escrow flow below — built specifically to demonstrate wallet connect, balance fetch, and a signed/submitted XLM transfer on Stellar testnet.
 
 ## 1. OFW POV (sender)
 <img width="1114" height="722" alt="Screenshot 2026-04-19 at 7 49 49 AM" src="https://github.com/user-attachments/assets/d3c1cc58-c76c-47d6-a26f-757625f5f840" />
@@ -76,7 +94,7 @@ BalikBayan ships with [Vercel Analytics](https://vercel.com/docs/analytics) and 
 ## Architecture
 ```
 Browser (React + Vite + TypeScript)
-  |-- Freighter Wallet API        (signing and wallet connection)
+  |-- Stellar Wallets Kit         (multi-wallet: Freighter, xBull, Albedo, Rabet, LOBSTR, Hana)
   |-- @stellar/stellar-sdk        (transaction building, RPC)
   |-- Anthropic API               (AI receipt verification via Claude)
   |-- Soroban RPC                 (on-chain reads and writes)
@@ -122,8 +140,8 @@ balikbayan2_stellar/
 | Soroban smart contracts | Escrow logic — lock, release, dispute, refund + NFT box minting |
 | USDC on Stellar | Stablecoin settlement, no XLM volatility for OFW remittances |
 | Stellar SDK | Transaction building, address validation, RPC queries |
-| Freighter Wallet | OFW and family wallet signing on testnet |
-| Soroban RPC | Simulate and submit transactions, read on-chain escrow state |
+| Stellar Wallets Kit | Multi-wallet connect and signing (Freighter, xBull, Albedo, Rabet, LOBSTR, Hana) for OFW and family |
+| Soroban RPC | Simulate and submit transactions, read on-chain escrow state; event polling for real-time state sync |
 
 ## Smart Contract
 
@@ -176,7 +194,7 @@ Active --> Fulfilled  (family calls confirm_payment → NFT mints)
 
 **For the frontend:**
 - Node.js 18+
-- Freighter browser extension set to Testnet
+- A Stellar wallet set to Testnet — Freighter, xBull, Albedo, Rabet, LOBSTR, or Hana
 - Testnet XLM (for gas) and testnet USDC
 
 ## Setup
@@ -213,6 +231,25 @@ VITE_HORIZON_URL=https://horizon-testnet.stellar.org
 VITE_CONTRACT_ID=<deployed contract ID>
 VITE_TOKEN_CONTRACT_ID=CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA
 ANTHROPIC_API_KEY=<your Anthropic API key>
+```
+
+## Testing & CI/CD
+
+GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on every push and pull request to `main`:
+
+| Job | Steps |
+|---|---|
+| **Frontend** | `npm ci` → typecheck (`tsc --noEmit`) → test (Vitest) → build (`vite build`) |
+| **Contract** | `cargo test --workspace` |
+
+**Test coverage:**
+- Frontend — 17 passing tests (Vitest + React Testing Library): wallet-error classification (`errors.test.ts`), PHP↔XLM conversion math (`tokenMath.test.ts`), and component behavior (`Button.test.tsx`)
+- Contract — 5 passing tests (`contract/contracts/hello-world/src/test.rs`): escrow creation, refund after deadline, dispute raising, payment confirmation + NFT minting, tier progression
+
+Run locally:
+```bash
+cd frontend && npm test        # frontend
+cd contract && cargo test      # contract
 ```
 
 ## Sample CLI Invocations
@@ -350,9 +387,9 @@ The most common requests above are shaping the near-term roadmap:
 
 | Feedback theme | Planned change |
 |---|---|
-| "Add support for more wallets" (multiple testers) | Evaluate additional Stellar wallet integrations beyond Freighter |
+| "Add support for more wallets" (multiple testers) | ✅ Shipped — multi-wallet via Stellar Wallets Kit (Freighter, xBull, Albedo, Rabet, LOBSTR, Hana) |
 | "Improve onboarding for new users" | Add an in-app first-time tutorial / wallet setup guide |
-| "Improve loading speed on mobile devices" | Code-split the frontend bundle (currently a single ~1.3MB chunk) |
+| "Improve loading speed on mobile devices" | Code-split the frontend bundle (the wallet kit's multi-wallet support grew it to ~2.6MB; needs `manualChunks`) |
 | "Add push/email notifications for payment status" | Add status-change notifications for escrow lifecycle events |
 
 ## Why Stellar

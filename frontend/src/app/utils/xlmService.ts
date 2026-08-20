@@ -6,7 +6,7 @@ import {
   BASE_FEE,
   Memo,
 } from '@stellar/stellar-sdk';
-import { signTransaction } from '@stellar/freighter-api';
+import { kitSignTransaction } from './walletKit';
 import { HORIZON_URL, NETWORK_PASSPHRASE } from './sorobanConfig';
 
 // Plain classic-Stellar XLM balance + payment helpers. Kept separate from
@@ -64,13 +64,10 @@ export async function sendXlmPayment(
 
   const tx = builder.setTimeout(30).build();
 
-  const signResult = await signTransaction(tx.toXDR(), {
+  const signResult = await kitSignTransaction(tx.toXDR(), {
     networkPassphrase: NETWORK_PASSPHRASE,
+    address: source,
   });
-
-  if ('error' in signResult && signResult.error) {
-    throw new Error((signResult.error as Error).message ?? 'Signing rejected');
-  }
 
   const signedTx = TransactionBuilder.fromXDR(signResult.signedTxXdr, NETWORK_PASSPHRASE);
   const submitResult = await horizon.submitTransaction(signedTx);

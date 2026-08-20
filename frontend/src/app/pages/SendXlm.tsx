@@ -4,6 +4,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { useApp } from '../context/AppContext';
 import { sendXlmPayment } from '../utils/xlmService';
+import { describeWalletError } from '../utils/errors';
 
 // A plain, minimal native-XLM transfer — separate from the BalikBayan escrow
 // flow in SendMoneyWizard. This exists to give the wallet's XLM balance and a
@@ -61,7 +62,7 @@ export function SendXlm({ onNavigate }: { onNavigate: (page: string) => void }) 
       refreshXlmBalance();
     } catch (err) {
       setStatus('error');
-      setErrorMessage(describeError(err));
+      setErrorMessage(describeWalletError(err).message);
     }
   };
 
@@ -177,29 +178,10 @@ export function SendXlm({ onNavigate }: { onNavigate: (page: string) => void }) 
             {status === 'pending' ? 'Signing & Sending…' : 'Send XLM'}
           </Button>
           <p className="text-xs text-center text-[#64748B]">
-            This is a plain Stellar testnet payment, signed with Freighter and submitted directly to Horizon.
+            This is a plain Stellar testnet payment, signed with your connected wallet and submitted directly to Horizon.
           </p>
         </div>
       )}
     </div>
   );
-}
-
-// Maps Freighter/Horizon failure modes to the 3 error states Level 1/2 ask for:
-// wallet not found / rejected, and insufficient balance (surfaced separately
-// by validate() before submission, but also caught here if Horizon rejects
-// the op with op_underfunded server-side).
-function describeError(err: unknown): string {
-  const message = err instanceof Error ? err.message : String(err);
-
-  if (/not found|install/i.test(message)) {
-    return 'Freighter wallet not found. Install the extension and try again.';
-  }
-  if (/reject|denied|declin/i.test(message)) {
-    return 'Transaction was rejected in Freighter.';
-  }
-  if (/underfunded|insufficient/i.test(message)) {
-    return 'Insufficient balance to complete this transaction.';
-  }
-  return message || 'Transaction failed. Please try again.';
 }

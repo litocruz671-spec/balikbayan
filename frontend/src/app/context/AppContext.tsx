@@ -1,11 +1,13 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { StrKey, MuxedAccount } from '@stellar/stellar-sdk';
 import { TierType } from '../components/NFTBoxCard';
 import { BillType } from '../components/BillTypeIcon';
 import { CONTRACT_READY } from '../utils/sorobanConfig';
 import * as contractService from '../utils/contractService';
 import { getXlmBalance } from '../utils/xlmService';
+import { openWalletModal, kitDisconnect, getSelectedWalletName } from '../utils/walletKit';
+import { describeWalletError } from '../utils/errors';
+import { watchWalletActivity, WalletActivityEvent } from '../utils/eventService';
 
 /**
  * Normalize any Stellar address to a plain G... Ed25519 public key.
@@ -38,6 +40,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string)
 }
 
 export type UserRole = 'ofw' | 'family' | 'merchant' | null;
+export type TxStatus = 'idle' | 'pending' | 'success' | 'error';
 
 export interface Escrow {
   id: string;
@@ -67,6 +70,7 @@ export interface NFTBox {
 interface AppContextValue {
   walletConnected: boolean;
   walletAddress: string;
+  walletName: string | null;
   walletError: string | null;
   userRole: UserRole;
   contractReady: boolean;
@@ -74,8 +78,12 @@ interface AppContextValue {
   xlmBalance: string;
   isBalanceLoading: boolean;
   refreshXlmBalance: () => Promise<void>;
+  lastActivityEvent: WalletActivityEvent | null;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
+  txStatus: TxStatus;
+  txMessage: string;
+  clearTxStatus: () => void;
   setUserRole: (role: UserRole) => void;
   escrows: Escrow[];
   addEscrow: (escrow: Escrow) => void;
@@ -123,6 +131,7 @@ function computeTier(boxCount: number): TierType {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
+  const [walletName, setWalletName] = useState<string | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [escrows, setEscrows] = useState<Escrow[]>(loadPersistedEscrows);
@@ -130,6 +139,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isChainLoading, setIsChainLoading] = useState(false);
   const [xlmBalance, setXlmBalance] = useState('0');
   const [isBalanceLoading, setIsBalanceLoading] = useState(false);
+  const [txStatus, setTxStatus] = useState<TxStatus>('idle');
+  const [txMessage, setTxMessage] = useState('');
+  const [lastActivityEvent, setLastActivityEvent] = useState<WalletActivityEvent | null>(null);
+
+  const clearTxStatus = () => {
+    setTxStatus('idle');
+    setTxMessage('');
+  };
+
+  // Wraps an on-chain action with visible pending/success/error status,
+  // classified via describeWalletError into the 3 failure types the app
+  // needs to distinguish (wallet not found, rejected, insufficient balance).
+  const withTxStatus = async <T,>(pendingMessage: string, successMessage: string, action: () => Promise<T>): Promise<T> => {
+    setTxStatus('pending');
+    setTxMessage(pendingMessage);
+    try {
+      const result = await action();
+      setTxStatus('success');
+      setTxMessage(successMessage);
+      return result;
+    } catch (err) {
+      const described = describeWalletError(err);
+      setTxStatus('error');
+      setTxMessage(described.message);
+      throw err;
+    }
+  };
 
   const refreshXlmBalance = useCallback(async (address?: string) => {
     const addr = address ?? walletAddress;
@@ -190,42 +226,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [walletAddress]);
 
+  // Real-time-ish state sync: watch Soroban RPC for token-transfer events
+  // touching the connected wallet (escrow funded, payment released, refund
+  // paid out, plain XLM sends) and refresh chain state + balance whenever
+  // one lands, instead of requiring a manual refresh.
+  useEffect(() => {
+    if (!walletConnected || !walletAddress) return;
+
+    const unsubscribe = watchWalletActivity(walletAddress, (event) => {
+      setLastActivityEvent(event);
+      refreshFromChain(walletAddress);
+      refreshXlmBalance(walletAddress);
+    });
+
+    return unsubscribe;
+  }, [walletConnected, walletAddress, refreshFromChain, refreshXlmBalance]);
+
   const connectWallet = async () => {
     setWalletError(null);
     try {
-      const connected = await isConnected();
-      if (!connected.isConnected) {
-        const msg = 'Freighter not found. Install the Freighter extension at freighter.app';
-        setWalletError(msg);
-        throw new Error(msg);
-      }
-
-      // Always call requestAccess — opens Freighter popup if needed, returns address.
-      // Freighter's requestAccess has no internal timeout, so a locked/unresponsive
-      // extension would otherwise hang this forever with no popup and no error.
-      const accessResult = await withTimeout(
-        requestAccess(),
-        15000,
-        'Freighter did not respond. Make sure the extension is unlocked and try again.'
+      // Opens StellarWalletsKit's picker modal — the user chooses among
+      // Freighter, xBull, Albedo, Rabet, Lobstr, or Hana. A locked/unresponsive
+      // extension would otherwise hang this forever with no popup and no error,
+      // hence the timeout.
+      const { address: rawAddr } = await withTimeout(
+        openWalletModal(),
+        60000,
+        'Wallet did not respond. Make sure it’s unlocked and try again.'
       );
-      if (accessResult.error) {
-        const msg = accessResult.error.message ?? 'Access denied by Freighter.';
-        setWalletError(msg);
-        throw new Error(msg);
-      }
 
-      const addressResult = await getAddress();
-      const rawAddr = addressResult.error ? '' : addressResult.address;
       const addr = normalizeToGAddress(rawAddr);
 
       if (!addr || !StrKey.isValidEd25519PublicKey(addr)) {
         const msg = rawAddr
-          ? `Unsupported address format returned by Freighter: "${rawAddr}". Please switch to a standard G... account in Freighter.`
-          : 'Could not get address. Open Freighter, log in, and try again.';
+          ? `Unsupported address format returned by wallet: "${rawAddr}". Please switch to a standard G... account.`
+          : 'Could not get address. Unlock your wallet and try again.';
         setWalletError(msg);
         throw new Error(msg);
       }
       setWalletAddress(addr);
+      setWalletName(getSelectedWalletName() ?? null);
       setWalletConnected(true);
 
       // Load persisted escrows for this wallet
@@ -236,17 +276,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       refreshFromChain(addr);
       refreshXlmBalance(addr);
     } catch (err) {
-      setWalletError(err instanceof Error ? err.message : 'Failed to connect wallet.');
+      const described = describeWalletError(err);
+      setWalletError(described.message);
     }
   };
 
   const disconnectWallet = () => {
+    kitDisconnect().catch(() => { /* best-effort; local state is cleared regardless */ });
     setWalletConnected(false);
     setWalletAddress('');
+    setWalletName(null);
     setWalletError(null);
     setUserRole(null);
     setNFTBoxes([]);
     setXlmBalance('0');
+    clearTxStatus();
   };
 
   const addEscrow = (escrow: Escrow) => {
@@ -273,12 +317,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     billDetails: Record<string, string>;
     deadline: string;
   }) => {
-    const escrowId = await contractService.createEscrow(
-      walletAddress,
-      params.recipientAddress,
-      params.amount,
-      params.billType,
-      params.deadline
+    const escrowId = await withTxStatus(
+      'Signing and locking funds on Stellar…',
+      'Promise locked on Stellar blockchain!',
+      () => contractService.createEscrow(
+        walletAddress,
+        params.recipientAddress,
+        params.amount,
+        params.billType,
+        params.deadline
+      )
     );
 
     const escrow: Escrow = {
@@ -301,7 +349,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const escrow = escrows.find(e => e.id === localEscrowId);
     if (!escrow?.onChainId) throw new Error('Escrow has no on-chain ID');
 
-    await contractService.confirmPayment(walletAddress, escrow.onChainId);
+    await withTxStatus(
+      'Signing and confirming payment on Stellar…',
+      'Payment confirmed — funds released!',
+      () => contractService.confirmPayment(walletAddress, escrow.onChainId!)
+    );
     updateEscrow(localEscrowId, { status: 'fulfilled' });
 
     // Refresh boxes since a new one gets minted on confirm_payment
@@ -312,7 +364,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const escrow = escrows.find(e => e.id === localEscrowId);
     if (!escrow?.onChainId) throw new Error('Escrow has no on-chain ID');
 
-    await contractService.claimRefund(walletAddress, escrow.onChainId);
+    await withTxStatus(
+      'Signing refund transaction…',
+      'Refund claimed.',
+      () => contractService.claimRefund(walletAddress, escrow.onChainId!)
+    );
     updateEscrow(localEscrowId, { status: 'expired' });
   };
 
@@ -320,7 +376,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const escrow = escrows.find(e => e.id === localEscrowId);
     if (!escrow?.onChainId) throw new Error('Escrow has no on-chain ID');
 
-    await contractService.raiseDispute(walletAddress, escrow.onChainId);
+    await withTxStatus(
+      'Signing dispute transaction…',
+      'Dispute raised.',
+      () => contractService.raiseDispute(walletAddress, escrow.onChainId!)
+    );
     updateEscrow(localEscrowId, { status: 'disputed' });
   };
 
@@ -334,6 +394,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       walletConnected,
       walletAddress,
+      walletName,
       walletError,
       userRole,
       contractReady: CONTRACT_READY,
@@ -341,8 +402,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       xlmBalance,
       isBalanceLoading,
       refreshXlmBalance,
+      lastActivityEvent,
       connectWallet,
       disconnectWallet,
+      txStatus,
+      txMessage,
+      clearTxStatus,
       setUserRole,
       escrows,
       addEscrow,

@@ -248,7 +248,7 @@ export function SendMoneyWizard({ onNavigate }: { onNavigate: (page: string) => 
               helperText={
                 formData.recipientAddress && !isValidStellarAddress(formData.recipientAddress)
                   ? '⚠️ Must start with G and be 56 characters'
-                  : 'Ask your family to get their Freighter wallet address'
+                  : 'Ask your family to get their Stellar wallet address'
               }
             />
             <div className="pt-4">

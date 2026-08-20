@@ -2,7 +2,7 @@ import { Package, Send, Receipt, CheckCircle2, ArrowRight, Users, Heart, Store, 
 import { motion } from 'motion/react';
 import { Button } from '../components/Button';
 import { useApp } from '../context/AppContext';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const heroContainer = {
   hidden: {},
@@ -28,29 +28,33 @@ const TIER_SHOWCASE = [
 ];
 
 export function LandingPage() {
-  const { connectWallet, setUserRole } = useApp();
+  const { connectWallet, walletConnected, walletError, setUserRole } = useApp();
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [connectError, setConnectError] = useState<string | null>(null);
+
+  // Advance from the connect modal to role selection only once the context
+  // confirms a wallet is actually connected — not just because the async
+  // call resolved (connectWallet() resolves on both success and failure).
+  useEffect(() => {
+    if (walletConnected && showConnectModal) {
+      setShowConnectModal(false);
+      setShowRoleModal(true);
+    }
+  }, [walletConnected, showConnectModal]);
 
   const handleConnect = () => {
-    setConnectError(null);
     setShowConnectModal(true);
   };
 
   const confirmConnect = async () => {
     setIsConnecting(true);
-    setConnectError(null);
-    try {
-      await connectWallet();
-      setShowConnectModal(false);
-      setShowRoleModal(true);
-    } catch (err) {
-      setConnectError(err instanceof Error ? err.message : 'Failed to connect wallet');
-    } finally {
-      setIsConnecting(false);
-    }
+    // connectWallet() never throws — it reports failure via context's walletError
+    // instead — so success is determined by checking walletConnected afterward,
+    // not by a try/catch (a plain catch here would silently swallow wallet-not-found,
+    // rejected, and other errors and still advance to role selection).
+    await connectWallet();
+    setIsConnecting(false);
   };
 
   return (
@@ -412,44 +416,34 @@ export function LandingPage() {
       {showConnectModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-            <h2 className="text-2xl font-semibold text-[#1E293B] mb-4">Connect your Freighter Wallet</h2>
+            <h2 className="text-2xl font-semibold text-[#1E293B] mb-4">Connect a Stellar Wallet</h2>
 
             <div className="flex flex-col items-center gap-4 py-6">
               <div className="w-20 h-20 bg-[#EFF6FF] rounded-full flex items-center justify-center">
                 <Package size={40} className="text-[#1591DC]" />
               </div>
               <p className="text-center text-[#64748B]">
-                Click below to connect your Freighter wallet and start using BalikBayan
+                Choose from Freighter, xBull, Albedo, Rabet, Lobstr, or Hana to start using BalikBayan
               </p>
             </div>
 
-            {connectError && (
+            {walletError && (
               <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-700">
-                {connectError.includes('not found') || connectError.includes('install')
-                  ? <>Freighter not detected. <a href="https://www.freighter.app" target="_blank" rel="noreferrer" className="underline font-semibold">Install Freighter</a> then try again.</>
-                  : connectError}
+                {walletError}
               </div>
             )}
 
             <div className="space-y-3">
               <Button className="w-full" loading={isConnecting} onClick={confirmConnect}>
-                {isConnecting ? 'Connecting…' : 'Connect'}
+                {isConnecting ? 'Connecting…' : 'Choose a Wallet'}
               </Button>
               <Button variant="ghost" className="w-full" onClick={() => setShowConnectModal(false)}>
                 Cancel
               </Button>
-              <a
-                href="https://freighter.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-center text-sm text-[#1591DC] hover:underline"
-              >
-                Install Freighter
-              </a>
             </div>
 
             <p className="text-xs text-[#64748B] text-center mt-4">
-              Make sure Freighter is set to Testnet
+              Make sure your wallet is set to Testnet
             </p>
           </div>
         </div>

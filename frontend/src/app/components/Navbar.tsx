@@ -1,7 +1,7 @@
 import { Package, User, Bell, ChevronDown, Globe } from 'lucide-react';
 import { Button } from './Button';
 import { useApp } from '../context/AppContext';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { copyToClipboard } from '../utils/clipboard';
 
 function formatXlm(balance: string): string {
@@ -18,13 +18,20 @@ export function Navbar() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [connecting, setConnecting] = useState(false);
 
+  // connectWallet() never throws (failures land in context's walletError), and
+  // walletAddress here would otherwise be a stale closure value captured before
+  // the connect call resolves — so we react to the context value updating
+  // instead of checking it synchronously right after the await.
+  useEffect(() => {
+    if (walletConnected && !userRole) {
+      setShowRoleModal(true);
+    }
+  }, [walletConnected, userRole]);
+
   const handleConnect = async () => {
     setConnecting(true);
     await connectWallet();
     setConnecting(false);
-    if (walletAddress) {
-      setShowRoleModal(true);
-    }
   };
 
   return (
@@ -148,7 +155,7 @@ export function Navbar() {
                   <Button onClick={handleConnect} disabled={connecting} className="text-sm px-3 py-2 sm:px-4">
                     {connecting ? 'Connecting…' : (
                       <>
-                        <span className="hidden sm:inline">Connect Freighter Wallet</span>
+                        <span className="hidden sm:inline">Connect Wallet</span>
                         <span className="sm:hidden">Connect Wallet</span>
                       </>
                     )}

@@ -47,6 +47,11 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+        // StellarWalletsKit's multi-wallet modal (Freighter, xBull, Albedo,
+        // Rabet, Lobstr, Hana) pushes the main bundle past Workbox's 2 MiB
+        // default precache limit; raise it rather than leaving the service
+        // worker un-buildable.
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {

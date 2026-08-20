@@ -3,7 +3,9 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { AppProvider, useApp } from './context/AppContext';
 import { ToastProvider } from './components/Toast';
+import { ActivityToastBridge } from './components/ActivityToastBridge';
 import { Navbar } from './components/Navbar';
+import { TransactionStatusBanner } from './components/TransactionStatusBanner';
 import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './pages/LandingPage';
 import { OFWDashboard } from './pages/OFWDashboard';
@@ -123,6 +125,7 @@ function AppContent() {
       </main>
 
       <InstallPrompt />
+      <TransactionStatusBanner />
     </div>
   );
 }
@@ -132,6 +135,7 @@ export default function App() {
     <AppProvider>
       <ToastProvider>
         <AppContent />
+        <ActivityToastBridge />
       </ToastProvider>
       <Analytics />
       <SpeedInsights />
