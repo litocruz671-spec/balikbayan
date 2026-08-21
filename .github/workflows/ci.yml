@@ -23,7 +23,11 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        # npm install rather than npm ci: the wallet kit's optional
+        # platform-specific native deps (e.g. bufferutil) resolve
+        # differently between the lockfile's generating platform and the
+        # Linux runner, which trips npm ci's strict lockfile-sync check.
+        run: npm install --no-audit --no-fund
 
       - name: Typecheck
         run: npx tsc --noEmit -p tsconfig.json
@@ -44,7 +48,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        # Pinned rather than "stable": a floating stable channel broke the
+        # ethnum crate (a soroban-sdk transitive dep) with an
+        # "cannot transmute between types of different sizes" error on a
+        # newer compiler. Verified working locally at this exact version.
+        uses: dtolnay/rust-toolchain@1.94.1
 
       - uses: Swatinem/rust-cache@v2
         with:
